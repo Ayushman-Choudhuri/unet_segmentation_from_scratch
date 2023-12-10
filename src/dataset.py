@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 import numpy as np
 
 class SegmentationDataset(Dataset):
-    def __init(self, image_dir , mask_dir , transform=None):
+    def __init__(self, image_dir , mask_dir , transform=None):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.transform = transform
