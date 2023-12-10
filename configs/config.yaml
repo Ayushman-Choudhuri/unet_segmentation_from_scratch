@@ -1,0 +1,36 @@
+model: 
+ in_channels: 3
+ out_channels: 1
+
+dataset: # All dataset paths must be relative to the project root folder
+  train_img_dir: "dataset/train_images/" 
+  train_mask_dir: "dataset/train_masks/"
+  val_img_dir: "dataset/val_images/"
+  val_mask_dir: "dataset/val_masks/"
+  
+train:
+  device: "cuda"
+  batch_size: 8
+  num_epochs: 1
+  learning_rate: 1e-4
+
+train_transform: 
+ resize:
+  image_height: 160
+  image_width: 240
+ rotate: 
+  limit: 35 #rotations would be done in the range [-35, 35] degrees
+  p: 1.0
+ horizontal_flip: 
+  p: 0.1
+ vertical_flip:
+  p: 1.0
+ normalize:
+  channel_mean: 0.0
+  channel_std: 1.0
+  max_pixel_value: 255.0 
+
+dataloader:
+ pin_memory: True 
+ num_workers: 1  # having one queue for batch dataloading seems optimal ==> https://www.youtube.com/watch?v=kWVgvsejXsE
+  
