@@ -56,6 +56,35 @@ def get_dataloaders(
 
 
 def check_accuracy_binary_classification(loader, model, device="cuda"):
+    """
+    Evaluate the accuracy and dice score of a binary classification model using the provided data loader.
+
+    Parameters:
+        loader (torch.utils.data.DataLoader): DataLoader providing batches of input data and ground truth labels.
+        model (torch.nn.Module):  Model to be evaluated.
+        device (str): Device on which to perform the evaluation (default: "cuda").
+
+    Returns:
+        None
+
+    Prints:
+        - The number of correct predictions and overall accuracy.
+        - The average Dice score across all batches.
+
+    Note:
+        - The function assumes that the model is trained for binary classification, and it should be in evaluation mode.
+          It iterates through the provided data loader, computes predictions, and evaluates accuracy and Dice score.
+        
+        -This function goes through the whole dataset (typically validation/test) in batches specified by the 
+         BATCH_SIZE parameter. Eg: If my output image size is 160x240 and batch size is 8 and the total images in the 
+         dataset is 50, I would get a total number of pixels as 160x240x8x50 = 1920000
+          
+        - The Dice score is a metric commonly used for evaluating segmentation models.
+
+    Example:
+        check_accuracy_binary_classification(val_loader, model, device="cuda")
+    """
+    
     num_correct= 0
     num_pixels = 0
     dice_score = 0
@@ -64,7 +93,7 @@ def check_accuracy_binary_classification(loader, model, device="cuda"):
     with torch.no_grad(): # To temporarily disable gradient computrations during a specific block of code. 
                           # Gradients are not tracked
 
-        for x,y in  loader: 
+        for x,y in loader: 
             x = x.to(device)
             y = y.to(device).unsqueeze(1) # unsqueeze used to match the tensor size of x and y
             preds = torch.sigmoid(model(x)) # for binary classification
