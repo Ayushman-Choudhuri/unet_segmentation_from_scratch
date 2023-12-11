@@ -4,3 +4,5 @@ dataset_cityscapes/*
 src/__pycache__
 saved_images/*
 checkpoints/*
+src/experiment.py
+unetseg_venv/*
