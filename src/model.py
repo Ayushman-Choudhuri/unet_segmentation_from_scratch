@@ -18,9 +18,9 @@ class DoubleConv(nn.Module):  # modularized as this pattern keeps repeating thro
     def forward(self,x):
         return self.conv(x)
     
-class UNET(nn.Module):
+class UNet(nn.Module):
     def __init__(self, in_channels=3 , out_channels=1 , features =[64,128,256,512]):  #in channels set to 3 due to RGB and out_chennel is 1 due to binary image segmentation
-        super(UNET,self).__init__()
+        super(UNet,self).__init__()
         self.decoder = nn.ModuleList()
         self.encoder = nn.ModuleList()
         self.pool = nn.MaxPool2d(kernel_size = 2 , stride=2)
@@ -70,7 +70,7 @@ class UNET(nn.Module):
     
 def test():
     x = torch.randn((3, 1, 160, 240))
-    model = UNET(in_channels=1, out_channels=1)
+    model = UNet(in_channels=1, out_channels=1)
     preds = model(x)
     print(preds.shape)
     assert preds.shape == x.shape
