@@ -1,2 +1,6 @@
 dataset/*
+dataset2/*
+dataset_cityscapes/*
 src/__pycache__
+saved_images/*
+checkpoints/*
