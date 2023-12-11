@@ -9,17 +9,20 @@ dataset: # All dataset paths must be relative to the project root folder
   val_mask_dir: "dataset/val_masks/"
   test_img_dir: "dataset/test_images/"
   test_mask_dir: "dataset/test_masks/"
+
+tensorboard: 
+ log_dir: "logs"
   
 train:
   device: "cuda"
-  batch_size: 8
-  num_epochs: 1
+  batch_size: 20
+  num_epochs: 50
   learning_rate: 1e-4
 
-train_transform: 
+train_transform:
  resize:
-  image_height: 160
-  image_width: 240
+  image_height: 320
+  image_width: 480
  rotate: 
   limit: 35 #rotations would be done in the range [-35, 35] degrees
   p: 1.0
