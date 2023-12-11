@@ -39,4 +39,4 @@ dataloader:
  pin_memory: True 
  num_workers: 1  # having one queue for batch dataloading seems optimal ==> https://www.youtube.com/watch?v=kWVgvsejXsE
   
-eval_mode: True
+eval_mode: False
