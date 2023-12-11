@@ -7,6 +7,8 @@ dataset: # All dataset paths must be relative to the project root folder
   train_mask_dir: "dataset/train_masks/"
   val_img_dir: "dataset/val_images/"
   val_mask_dir: "dataset/val_masks/"
+  test_img_dir: "dataset/test_images/"
+  test_mask_dir: "dataset/test_masks/"
   
 train:
   device: "cuda"
@@ -34,3 +36,4 @@ dataloader:
  pin_memory: True 
  num_workers: 1  # having one queue for batch dataloading seems optimal ==> https://www.youtube.com/watch?v=kWVgvsejXsE
   
+eval_mode: True
