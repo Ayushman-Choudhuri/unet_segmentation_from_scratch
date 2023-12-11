@@ -23,10 +23,10 @@ with open('configs/config.yaml' , 'r') as f:
 
 if config['train']['device'] == 'cuda':  # Confirm if cuda is available incase cuda is selected
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print("==> Using Device : GPU")
 else: 
     DEVICE ='cpu'
-
-print(f"==> Using Device :{DEVICE}")
+    print("==> Using Device : CPU")
 
 #model parameters
 IN_CHANNELS = config['model']['in_channels']
@@ -57,6 +57,10 @@ VERTICAL_FLIP_PROB = config['train_transform']['vertical_flip']['p']
 NORMALIZE_CHANNEL_MEAN = config['train_transform']['normalize']['channel_mean']
 NORMALIZE_CHANNEL_STD = config['train_transform']['normalize']['channel_std']
 NORMALIZE_MAX_PIX_VALUE = config['train_transform']['normalize']['max_pixel_value']
+
+
+EVAL_MODEL = config['eval_mode']
+
 
 def train( loader , model, optimizer , loss_fn, scaler):
     loop = tqdm(loader)
@@ -116,9 +120,9 @@ def main():
     )
     
     # Create instance of UNET model class 
-    model = UNET(in_channels=3, out_channels=1).to(DEVICE) 
+    model = UNET(in_channels=IN_CHANNELS, out_channels=OUT_CHANNELS).to(DEVICE) 
     
-    #Setup Loss Function
+    #Setup Loss Function based on number of output classes
     if OUT_CHANNELS == 1: 
         loss_fn = nn.BCEWithLogitsLoss() #  Here we are going with BCE(Binary Cross Entropy) with logits loss as we are doing binary classification of pixels. 
                                      #  Also nn.BCEWithLogitsLoss is more stable than nn.BCEloss
@@ -142,31 +146,34 @@ def main():
         PIN_MEMORY
     )
     
-    #Setup Scaler to optimize compute efficiency in training loops by dynamically adjusting the scale of the gradient during backward pass
-    # This is done to avoid the problem of gradient overflow or underflow.
-    scaler = torch.cuda.amp.GradScaler()
 
-    # Empty the GPU cache before training starts
-    torch.cuda.empty_cache()
-    
-    for epoch in range(NUM_EPOCHS):
+    if EVAL_MODEL: 
+        load_checkpoint(torch.load("checkpoints/checkpoint.pth.tar"), model)
+        check_accuracy_binary_classification(val_loader,model, device=DEVICE)
+        save_predictions_as_imgs(
+            val_loader, model, folder="saved_images/", device=DEVICE
+        )
+    else: 
+        #Setup Scaler to optimize compute efficiency in training loops by dynamically adjusting the scale of the gradient during backward pass
+        # This is done to avoid the problem of gradient overflow or underflow.
+        scaler = torch.cuda.amp.GradScaler()
 
-        train(train_loader, model, optimizer, loss_fn, scaler)
+        # Empty the GPU cache before training starts
+        torch.cuda.empty_cache()
+        
+        for epoch in range(NUM_EPOCHS):
 
-        # save model
-        checkpoint = {
-            "state_dict": model.state_dict(),
-            "optimizer":optimizer.state_dict(),
-        }
-        save_checkpoint(checkpoint)
+            train(train_loader, model, optimizer, loss_fn, scaler)
 
-        # check accuracy
-        check_accuracy_binary_classification(val_loader, model, device=DEVICE)
+            # save model
+            checkpoint = {
+                "state_dict": model.state_dict(),
+                "optimizer":optimizer.state_dict(),
+            }
+            save_checkpoint(checkpoint)
 
-        # # print some examples to a folder
-        # save_predictions_as_imgs(
-        #     val_loader, model, folder="../saved_images/", device=DEVICE
-        # )
+            # check accuracy
+            check_accuracy_binary_classification(val_loader, model, device=DEVICE)
 
 if __name__ == "__main__":
     main()
