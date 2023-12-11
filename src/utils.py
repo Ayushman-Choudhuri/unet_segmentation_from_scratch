@@ -3,16 +3,16 @@ import torchvision
 from dataset import SegmentationDataset
 from torch.utils.data import DataLoader
 
-def save_checkpoint(state, epoch):
+def saveCheckpoint(state, epoch):
     print(">> Saving Checkpoint")
     filename="checkpoints/"+"checkpoint.pth.tar"+f"_epoch{epoch+1}"
     torch.save(state, filename)
 
-def load_checkpoint (checkpoint, model):
+def loadCheckpoint(checkpoint, model):
     print(">> Loading Checkpoint")
     model.load_state_dict(checkpoint["state_dict"])
 
-def get_dataloaders(
+def getDataloaders(
         
     train_dir,
     train_maskdir,
@@ -56,7 +56,7 @@ def get_dataloaders(
     return train_dataloader, val_dataloader
 
 
-def check_accuracy_binary_classification(loader, model, device="cuda"):
+def checkAccuracyBC(loader, model, device="cuda"):
     """
     Evaluate the accuracy and dice score of a binary classification model using the provided data loader.
 
@@ -111,7 +111,7 @@ def check_accuracy_binary_classification(loader, model, device="cuda"):
     print(f"Dice score: {dice_score/len(loader)}")
     model.train() # Set model back to training mode
 
-def save_predictions_as_imgs( loader, model, folder="saved_images/", device="cuda") :
+def savePredictions( loader, model, folder="saved_images/", device="cuda") :
     model.eval() # Set model to evaluation mode
     for idx, (x, y) in enumerate(loader):
         x = x.to(device=device)
