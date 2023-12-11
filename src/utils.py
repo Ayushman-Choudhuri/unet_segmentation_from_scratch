@@ -3,8 +3,9 @@ import torchvision
 from dataset import SegmentationDataset
 from torch.utils.data import DataLoader
 
-def save_checkpoint(state, filename="checkpoint.pth.tar"):
+def save_checkpoint(state, epoch):
     print(">> Saving Checkpoint")
+    filename="checkpoints/"+"checkpoint.pth.tar"+f"_epoch{epoch+1}"
     torch.save(state, filename)
 
 def load_checkpoint (checkpoint, model):
@@ -103,9 +104,9 @@ def check_accuracy_binary_classification(loader, model, device="cuda"):
             dice_score += (2 * (preds * y).sum()) / (
                 (preds + y).sum() + 1e-8
             )
-
+    acc = (num_correct/num_pixels)*100
     print(
-        f"Got {num_correct}/{num_pixels} with acc {num_correct/num_pixels*100:.2f}"
+        f"Got {num_correct}/{num_pixels} with accuracy: {acc}"
     )
     print(f"Dice score: {dice_score/len(loader)}")
     model.train() # Set model back to training mode
