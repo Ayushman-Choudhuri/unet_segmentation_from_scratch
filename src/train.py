@@ -7,6 +7,9 @@ import torch.optim as optim
 from model import UNET
 import yaml
 
+# from torch.utils.tensorboard import SummaryWriter 
+
+
 #Import Utility Functions 
 from utils import (
     load_checkpoint,
@@ -27,6 +30,10 @@ if config['train']['device'] == 'cuda':  # Confirm if cuda is available incase c
 else: 
     DEVICE ='cpu'
     print("==> Using Device : CPU")
+
+#Setup Tensorboard SummaryWriter
+# log_dir = config['tensorboard']['log_dir']
+# writer = SummaryWriter(log_dir)
 
 #model parameters
 IN_CHANNELS = config['model']['in_channels']
@@ -62,7 +69,7 @@ NORMALIZE_MAX_PIX_VALUE = config['train_transform']['normalize']['max_pixel_valu
 EVAL_MODEL = config['eval_mode']
 
 
-def train( loader , model, optimizer , loss_fn, scaler):
+def train( loader , model, optimizer , loss_fn, scaler, epoch):
     loop = tqdm(loader)
 
     for batch_idx , (input_data , target_labels) in enumerate(loop):
@@ -80,6 +87,9 @@ def train( loader , model, optimizer , loss_fn, scaler):
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
+
+        # Log loss to TensorBoard
+        # writer.add_scalar("Loss/train", loss.item(), epoch * len(loader) + batch_idx)
 
         # update tqdm loop
         loop.set_postfix(loss=loss.item())  # adds additional loss stats to display at the end of the tqdm bar
@@ -148,12 +158,14 @@ def main():
     
 
     if EVAL_MODEL: 
-        load_checkpoint(torch.load("checkpoints/checkpoint.pth.tar"), model)
+        load_checkpoint(torch.load("checkpoints/checkpoint.pth.tar_epoch16"), model)
         check_accuracy_binary_classification(val_loader,model, device=DEVICE)
         save_predictions_as_imgs(
             val_loader, model, folder="saved_images/", device=DEVICE
         )
+
     else: 
+        
         #Setup Scaler to optimize compute efficiency in training loops by dynamically adjusting the scale of the gradient during backward pass
         # This is done to avoid the problem of gradient overflow or underflow.
         scaler = torch.cuda.amp.GradScaler()
@@ -163,17 +175,23 @@ def main():
         
         for epoch in range(NUM_EPOCHS):
 
-            train(train_loader, model, optimizer, loss_fn, scaler)
+            print(f"EPOCH {epoch+1}")
+
+            train(train_loader, model, optimizer, loss_fn, scaler,epoch)
 
             # save model
             checkpoint = {
                 "state_dict": model.state_dict(),
                 "optimizer":optimizer.state_dict(),
             }
-            save_checkpoint(checkpoint)
+
+            save_checkpoint(checkpoint,epoch)
 
             # check accuracy
             check_accuracy_binary_classification(val_loader, model, device=DEVICE)
+
+        # Close the SummaryWriter
+        #writer.close()
 
 if __name__ == "__main__":
     main()
