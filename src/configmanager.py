@@ -1,7 +1,7 @@
 import yaml
 import torch
 
-class ParameterManager:
+class ConfigManager:
     def __init__(self, config_file_path):
         with open(config_file_path, 'r') as f: 
             self.config = yaml.safe_load(f)
