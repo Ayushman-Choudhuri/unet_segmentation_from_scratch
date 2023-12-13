@@ -5,7 +5,7 @@ from tqdm import tqdm
 import torch.nn as nn
 import torch.optim as optim 
 from model import UNet
-from configmanager import ParameterManager
+from configmanager import ConfigManager
 
 
 #Import Utility Functions 
@@ -17,16 +17,16 @@ from utils import (
     savePredictions,
 )
 
-# Load Parameters from config file 
-param = ParameterManager('configs/config.yaml')
+# Load configuration parameters from config file 
+config = ConfigManager('configs/config.yaml')
 
 
 def train_step( loader , model, optimizer , loss_fn, scaler, epoch):
     loop = tqdm(loader)
 
     for batch_idx , (input_data , target_labels) in enumerate(loop):
-        input_data = input_data.to(device= param.device)
-        target_labels = target_labels.float().unsqueeze(1).to(device=param.device)  # to match the tensor shape of input data
+        input_data = input_data.to(device= config.device)
+        target_labels = target_labels.float().unsqueeze(1).to(device=config.device)  # to match the tensor shape of input data
 
         #Forward Pass
         with torch.cuda.amp.autocast(): # To enable Automatic Mixed Precision (amp) feature 
@@ -51,14 +51,14 @@ def main():
     # Setup Image augmentations on training data
     train_transform = A.Compose(
         [
-            A.Resize(height=param.img_height, width=param.img_width),
-            A.Rotate(limit=param.rotate_limit, p=param.rotate_prob),
-            A.HorizontalFlip(p= param.horizontal_flip_prob),
-            A.VerticalFlip(p=param.vertical_flip_prob),
+            A.Resize(height=config.img_height, width=config.img_width),
+            A.Rotate(limit=config.rotate_limit, p=config.rotate_prob),
+            A.HorizontalFlip(p= config.horizontal_flip_prob),
+            A.VerticalFlip(p=config.vertical_flip_prob),
             A.Normalize(
-                mean=[param.normalize_channel_mean, param.normalize_channel_mean, param.normalize_channel_mean],
-                std=[param.normalize_channel_std, param.normalize_channel_std, param.normalize_channel_std],
-                max_pixel_value=param.normalize_max_pixel_value,
+                mean=[config.normalize_channel_mean, config.normalize_channel_mean, config.normalize_channel_mean],
+                std=[config.normalize_channel_std, config.normalize_channel_std, config.normalize_channel_std],
+                max_pixel_value=config.normalize_max_pixel_value,
             ),
             ToTensorV2(),
         ],
@@ -67,21 +67,21 @@ def main():
     #Setup image augmentations on validation data
     val_transforms = A.Compose(
         [
-            A.Resize(height=param.img_height, width=param.img_width),
+            A.Resize(height=config.img_height, width=config.img_width),
             A.Normalize(
-                mean=[param.normalize_channel_mean, param.normalize_channel_mean, param.normalize_channel_mean],
-                std=[param.normalize_channel_std, param.normalize_channel_std, param.normalize_channel_std],
-                max_pixel_value=param.normalize_max_pixel_value,
+                mean=[config.normalize_channel_mean, config.normalize_channel_mean, config.normalize_channel_mean],
+                std=[config.normalize_channel_std, config.normalize_channel_std, config.normalize_channel_std],
+                max_pixel_value=config.normalize_max_pixel_value,
             ),
             ToTensorV2(),
         ],
     )
     
     # Create instance of UNET model class 
-    model = UNet(in_channels=param.in_channels, out_channels=param.out_channels).to(param.device) 
+    model = UNet(in_channels=config.in_channels, out_channels=config.out_channels).to(config.device) 
     
     #Setup Loss Function based on number of output classes
-    if param.out_channels == 1: 
+    if config.out_channels == 1: 
         loss_fn = nn.BCEWithLogitsLoss() #  Here we are going with BCE(Binary Cross Entropy) with logits loss as we are doing binary classification of pixels. 
                                      #  Also nn.BCEWithLogitsLoss is more stable than nn.BCEloss
     else: 
@@ -89,27 +89,27 @@ def main():
 
 
     # Setup Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=param.learning_rate) # Setup ADAM optimizer
+    optimizer = optim.Adam(model.parameters(), lr=config.learning_rate) # Setup ADAM optimizer
 
     # Setup Dataloaders
     train_loader, val_loader = getDataloaders(
-        param.train_img_dir,
-        param.train_mask_dir,
-        param.val_img_dir,
-        param.val_mask_dir,
-        param.batch_size,
+        config.train_img_dir,
+        config.train_mask_dir,
+        config.val_img_dir,
+        config.val_mask_dir,
+        config.batch_size,
         train_transform,
         val_transforms,
-        param.num_workers,
-        param.pin_memory
+        config.num_workers,
+        config.pin_memory
     )
     
 
-    if param.eval_mode: 
+    if config.eval_mode: 
         loadCheckpoint(torch.load("checkpoints/checkpoint.pth.tar_epoch16"), model)
-        checkAccuracyBC(val_loader,model, device=param.device)
+        checkAccuracyBC(val_loader,model, device=config.device)
         savePredictions(
-            val_loader, model, folder="saved_images/", device=param.device
+            val_loader, model, folder="saved_images/", device=config.device
         )
 
     else: 
@@ -121,7 +121,7 @@ def main():
         # Empty the GPU cache before training starts
         torch.cuda.empty_cache()
         
-        for epoch in range(param.num_epochs):
+        for epoch in range(config.num_epochs):
 
             print(f"EPOCH {epoch+1}")
 
@@ -136,7 +136,7 @@ def main():
             saveCheckpoint(checkpoint,epoch)
 
             # check accuracy
-            checkAccuracyBC(val_loader, model, device=param.device)
+            checkAccuracyBC(val_loader, model, device=config.device)
 
         # Close the SummaryWriter
         #writer.close()
