@@ -16,6 +16,9 @@ logs:
   checkpoints:
     checkpoint_dir: "logs/checkpoints/"
     checkpoint_prefix: checkpoint.pth.tar
+  saved_images:
+    saved_images_dir: "logs/saved_images/"
+  
 train:
   device: "cuda"
   batch_size: 20
