@@ -4,9 +4,8 @@ from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm 
 import torch.nn as nn
 import torch.optim as optim 
-from model import UNet
+from models.unet import UNet
 from configmanager import ConfigManager
-
 
 #Import Utility Functions 
 from utils import (
@@ -18,10 +17,9 @@ from utils import (
 )
 
 # Load configuration parameters from config file 
-config = ConfigManager('configs/config.yaml')
+config = ConfigManager('configs/config_carvana.yaml')
 
-
-def train_step( loader , model, optimizer , loss_fn, scaler, epoch):
+def trainStep( loader , model, optimizer , loss_fn, scaler, epoch):
     loop = tqdm(loader)
 
     for batch_idx , (input_data , target_labels) in enumerate(loop):
@@ -77,7 +75,7 @@ def main():
         ],
     )
     
-    # Create instance of UNET model class 
+    # Create instance of unet model class 
     model = UNet(in_channels=config.in_channels, out_channels=config.out_channels).to(config.device) 
     
     #Setup Loss Function based on number of output classes
@@ -125,7 +123,7 @@ def main():
 
             print(f"EPOCH {epoch+1}")
 
-            train_step(train_loader, model, optimizer, loss_fn, scaler,epoch)
+            trainStep(train_loader, model, optimizer, loss_fn, scaler,epoch)
 
             # save model
             checkpoint = {
