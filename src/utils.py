@@ -1,11 +1,11 @@
 import torch 
 import torchvision 
-from dataset import SegmentationDataset
+from dataset.carvana import CarvanaDataset
 from torch.utils.data import DataLoader
 
 def saveCheckpoint(state, epoch):
     print(">> Saving Checkpoint")
-    filename="checkpoints/"+"checkpoint.pth.tar"+f"_epoch{epoch+1}"
+    filename="logs/checkpoints/"+"checkpoint.pth.tar"+f"_epoch{epoch+1}"
     torch.save(state, filename)
 
 def loadCheckpoint(checkpoint, model):
@@ -25,7 +25,7 @@ def getDataloaders(
     pin_memory
     ): 
 
-    train_dataset = SegmentationDataset(
+    train_dataset = CarvanaDataset(
                 image_dir = train_dir ,
                 mask_dir = train_maskdir,
                 transform =train_transform,
@@ -39,7 +39,7 @@ def getDataloaders(
                 shuffle  = True
                 )
     
-    val_dataset = SegmentationDataset(
+    val_dataset = CarvanaDataset(
                 image_dir = val_dir ,
                 mask_dir = val_maskdir,
                 transform =val_transform,
@@ -52,6 +52,8 @@ def getDataloaders(
                 pin_memory = pin_memory,
                 shuffle = False
                 )
+    
+    print(train_dataset.len)
     
     return train_dataloader, val_dataloader
 
@@ -81,9 +83,6 @@ def checkAccuracyBC(loader, model, device="cuda"):
          dataset is 50, I would get a total number of pixels as 160x240x8x50 = 1920000
           
         - The Dice score is a metric commonly used for evaluating segmentation models.
-
-    Example:
-        check_accuracy_binary_classification(val_loader, model, device="cuda")
     """
     
     num_correct= 0
@@ -111,7 +110,7 @@ def checkAccuracyBC(loader, model, device="cuda"):
     print(f"Dice score: {dice_score/len(loader)}")
     model.train() # Set model back to training mode
 
-def savePredictions( loader, model, folder="saved_images/", device="cuda") :
+def savePredictions( loader, model, folder="logs/images/", device="cuda") :
     model.eval() # Set model to evaluation mode
     for idx, (x, y) in enumerate(loader):
         x = x.to(device=device)
