@@ -1,8 +1,9 @@
-dataset/*
-dataset2/*
-dataset_cityscapes/*
-src/__pycache__
-saved_images/*
-checkpoints/*
-src/experiment.py
+datasets/*
+logs/*
 unetseg_venv/*
+
+src/experiment.py
+src/__pycache__
+src/dataset/__pycache__
+src/utils/__pycache__
+src/models/__pycache__
