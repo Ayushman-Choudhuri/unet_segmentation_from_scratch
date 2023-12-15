@@ -5,16 +5,11 @@ from tqdm import tqdm
 import torch.nn as nn
 import torch.optim as optim 
 from models.unet import UNet
-from configmanager import ConfigManager
+from utils.config import ConfigManager
+from utils.dataloaders import getDataloaders
+from utils.evaluators import ClassificationEvaluator
+from utils.logfunctions import loadCheckpoint, saveCheckpoint , savePredictions
 
-#Import Utility Functions 
-from utils import (
-    loadCheckpoint,
-    saveCheckpoint,
-    getDataloaders,
-    checkAccuracyBC,
-    savePredictions,
-)
 
 # Load configuration parameters from config file 
 config = ConfigManager('configs/config_carvana.yaml')
@@ -43,11 +38,13 @@ def trainStep( loader , model, optimizer , loss_fn, scaler, epoch):
         # Empty the GPU cache after each epoch
         torch.cuda.empty_cache()
 
+    return loss
+
 
 def main(): 
 
     # Setup Image augmentations on training data
-    train_transform = A.Compose(
+    train_transforms = A.Compose(
         [
             A.Resize(height=config.img_height, width=config.img_width),
             A.Rotate(limit=config.rotate_limit, p=config.rotate_prob),
@@ -89,23 +86,25 @@ def main():
     # Setup Optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate) # Setup ADAM optimizer
 
-    # Setup Dataloaders
-    train_loader, val_loader = getDataloaders(
-        config.train_img_dir,
-        config.train_mask_dir,
-        config.val_img_dir,
-        config.val_mask_dir,
-        config.batch_size,
-        train_transform,
-        val_transforms,
-        config.num_workers,
-        config.pin_memory
-    )
+
+    # Setup Dataloaders from training and Validation datasets
+    train_loader, val_loader = getDataloaders(  config.train_img_dir,
+                                                config.train_mask_dir,
+                                                config.val_img_dir,
+                                                config.val_mask_dir,
+                                                config.batch_size,
+                                                train_transforms,
+                                                val_transforms,
+                                                config.num_workers,
+                                                config.pin_memory
+                                             )
     
 
     if config.eval_mode: 
         loadCheckpoint(torch.load("checkpoints/checkpoint.pth.tar_epoch16"), model)
-        checkAccuracyBC(val_loader,model, device=config.device)
+        evaluator = ClassificationEvaluator(2 , val_loader, model, config.device)
+        print(f"Dice Score: {evaluator.getDiceScore()}")
+        
         savePredictions(
             val_loader, model, folder="saved_images/", device=config.device
         )
@@ -123,7 +122,7 @@ def main():
 
             print(f"EPOCH {epoch+1}")
 
-            trainStep(train_loader, model, optimizer, loss_fn, scaler,epoch)
+            epoch_loss = trainStep(train_loader, model, optimizer, loss_fn, scaler,epoch)
 
             # save model
             checkpoint = {
@@ -134,7 +133,10 @@ def main():
             saveCheckpoint(checkpoint,epoch)
 
             # check accuracy
-            checkAccuracyBC(val_loader, model, device=config.device)
+            evaluator = ClassificationEvaluator(2 , val_loader, model, config.device)
+            print(f"Dice Score: {evaluator.getDiceScore():.4f}")
+            print(f"Epoch Loss: {epoch_loss:.4f}")
+
 
         # Close the SummaryWriter
         #writer.close()
