@@ -1,7 +1,6 @@
 import os
 from PIL import Image
 from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
 import numpy as np
 
 class CarvanaDataset(Dataset):
@@ -41,11 +40,6 @@ class CarvanaDataset(Dataset):
     @property
     def len(self):
         return len(self._images)
-    
-    
-    
-
-    
 
     
 
