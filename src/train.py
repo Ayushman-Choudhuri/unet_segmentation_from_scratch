@@ -120,7 +120,7 @@ def main():
         
         for epoch in range(config.num_epochs):
 
-            print(f"EPOCH {epoch+1}")
+            print(f"EPOCH {epoch+1} / {config.num_epochs}")
 
             epoch_loss = trainStep(train_loader, model, optimizer, loss_fn, scaler,epoch)
 
