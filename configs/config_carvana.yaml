@@ -15,20 +15,19 @@ logs:
     log_dir: "logs/tensorboard/"
   checkpoints:
     checkpoint_dir: "logs/checkpoints/"
-    checkpoint_prefix: checkpoint.pth.tar
   saved_images:
     saved_images_dir: "logs/saved_images/"
   
 train:
   device: "cuda"
-  batch_size: 20
-  num_epochs: 60
-  learning_rate: 1e-5
+  batch_size: 100
+  num_epochs: 30
+  learning_rate: 1e-4
 
-train_transform:
+transform:
   resize:
-    image_height: 320
-    image_width: 480
+    image_height: 160
+    image_width: 240
   rotate: 
     limit: 35 #rotations would be done in the range [-35, 35] degrees
     p: 1.0
@@ -44,5 +43,3 @@ train_transform:
 dataloader:
   pin_memory: True 
   num_workers: 1  # having one queue for batch dataloading seems optimal ==> https://www.youtube.com/watch?v=kWVgvsejXsE
-  
-eval_mode: False
