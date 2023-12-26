@@ -159,7 +159,7 @@ class CityscapesLabelEncoder:
         labelid_img = np.zeros(ohe_image.shape[:2])
 
         for ch in range (ohe_image.shape[-1]):
-            ys, xs = np.where(ohe_image[...,ch])
+            ys, xs = np.nonzero(ohe_image[:,:,ch])
             labelid_img[ys,xs]= ch
 
         return labelid_img.astype(int)
@@ -179,11 +179,11 @@ class CityscapesLabelEncoder:
         
         color_img = np.zeros(labelid_img.shape[:2]+(3,)).astype(np.uint8)
 
-        id_list = self.cityscapes_labels_df["id"].tolist()
+        id_list = self.cityscapes_labels_df[mode].tolist()
 
         for label in id_list: 
             ys , xs = np.where(labelid_img == label)
-            color_code = self.cityscapes_labels_df.loc[self.cityscapes_labels_df["id"] == label, "color"].values[0]
+            color_code = self.cityscapes_labels_df.loc[self.cityscapes_labels_df[mode] == label, "color"].values[0]
             color_img[ys,xs] = np.array(color_code)
 
         return color_img
