@@ -29,7 +29,7 @@ class CityscapesLabelEncoder:
                     # might make sense for some approaches.
                     # Max value is 255!
 
-                    In the CityscapesLabelEncoder class the trainID values of 255 and -1 are replaced by 19
+                    **** In the CityscapesLabelEncoder class the trainID values of 255 and -1 are replaced by 19 in __init__***
 
     'category'    , # The name of the category that this label belongs to
 
@@ -141,12 +141,30 @@ class CityscapesLabelEncoder:
         
         return ohe_labels.astype(int)
 
-         
+    def ohe2labels(self, ohe_label_image:np.ndarray):
+        """
+        This method converts one hot encoded images back to an image with label ids
+        """        
 
-    def inverse_ohe(self):
-        pass 
+        if not isinstance(ohe_label_image , np.ndarray):
+            
+            try: 
+                labelid_img = np.ndarray(ohe_label_image)
 
-    def classtocolor(self):
+            except: 
+                raise ValueError("==> ohe_label_image must be converted to a numpy array before conversion to labelid image")
+
+
+        #Make a empty labelid_img 
+        labelid_img = np.zeros(ohe_label_image.shape[:2])
+
+        for ch in range (ohe_label_image.shape[-1]):
+            ys, xs = np.where(ohe_label_image[...,ch])
+            labelid_img[ys,xs]= ch
+
+        return labelid_img.astype(int)
+    
+    def label2color(self , labelid_img:np.ndarray):
         pass
-        
+
     
