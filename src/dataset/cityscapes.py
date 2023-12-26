@@ -93,7 +93,7 @@ class CityscapesLabelEncoder:
             self.class_ids = self.cityscapes_labels_df["trainId"].unique()
             self.class_ids.sort() # in-place labels ascending sort
 
-    def make_ohe(self , labelid_img:np.ndarray , mode="catId"): 
+    def label2ohe(self , labelid_img:np.ndarray , mode="catId"): 
         """
         Converts Image with labelids into a one hot encoded format
         
@@ -140,31 +140,50 @@ class CityscapesLabelEncoder:
             ohe_labels[y,x,c]=1
         
         return ohe_labels.astype(int)
+    
 
-    def ohe2labels(self, ohe_label_image:np.ndarray):
+    def ohe2label(self, ohe_image:np.ndarray):
         """
         This method converts one hot encoded images back to an image with label ids
         """        
 
-        if not isinstance(ohe_label_image , np.ndarray):
+        if not isinstance(ohe_image , np.ndarray):
             
             try: 
-                labelid_img = np.ndarray(ohe_label_image)
+                labelid_img = np.ndarray(ohe_image)
 
             except: 
                 raise ValueError("==> ohe_label_image must be converted to a numpy array before conversion to labelid image")
 
-
         #Make a empty labelid_img 
-        labelid_img = np.zeros(ohe_label_image.shape[:2])
+        labelid_img = np.zeros(ohe_image.shape[:2])
 
-        for ch in range (ohe_label_image.shape[-1]):
-            ys, xs = np.where(ohe_label_image[...,ch])
+        for ch in range (ohe_image.shape[-1]):
+            ys, xs = np.where(ohe_image[...,ch])
             labelid_img[ys,xs]= ch
 
         return labelid_img.astype(int)
     
-    def label2color(self , labelid_img:np.ndarray):
-        pass
+    def label2color(self , labelid_img:np.ndarray , mode="catId"):
+        """
+        This method converts labelid image to a RGB segmentation image
+        
+        """
+        if not isinstance(labelid_img , np.ndarray):
+             
+            try: 
+                labelid_img = np.array(labelid_img)
+            except: 
+                 raise ValueError("==> labelid_img must be converted to a np.ndarray datatype before one hot encoding")
+                 
+        
+        color_img = np.zeros(labelid_img.shape[:2]+(3,)).astype(np.uint8)
 
-    
+        id_list = self.cityscapes_labels_df["id"].tolist()
+
+        for label in id_list: 
+            ys , xs = np.where(labelid_img == label)
+            color_code = self.cityscapes_labels_df.loc[self.cityscapes_labels_df["id"] == label, "color"].values[0]
+            color_img[ys,xs] = np.array(color_code)
+
+        return color_img
