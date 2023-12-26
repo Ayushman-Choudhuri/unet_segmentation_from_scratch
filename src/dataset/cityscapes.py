@@ -7,6 +7,42 @@ import numpy as np
 class CityscapesLabelEncoder:
     """
     Class is built using the label mappings available here: https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/helpers/labels.py
+    
+    'name'        , # The identifier of this label, e.g. 'car', 'person', ... .
+                    # We use them to uniquely name a class
+
+    'id'          , # An integer ID that is associated with this label.
+                    # The IDs are used to represent the label in ground truth images
+                    # An ID of -1 means that this label does not have an ID and thus
+                    # is ignored when creating ground truth images (e.g. license plate).
+                    # Do not modify these IDs, since exactly these IDs are expected by the
+                    # evaluation server.
+
+    'trainId'     , # Feel free to modify these IDs as suitable for your method. Then create
+                    # ground truth images with train IDs, using the tools provided in the
+                    # 'preparation' folder. However, make sure to validate or submit results
+                    # to our evaluation server using the regular IDs above!
+                    # For trainIds, multiple labels might have the same ID. Then, these labels
+                    # are mapped to the same class in the ground truth images. For the inverse
+                    # mapping, we use the label that is defined first in the list below.
+                    # For example, mapping all void-type classes to the same ID in training,
+                    # might make sense for some approaches.
+                    # Max value is 255!
+
+                    In the CityscapesLabelEncoder class the trainID values of 255 and -1 are replaced by 19
+
+    'category'    , # The name of the category that this label belongs to
+
+    'categoryId'  , # The ID of this category. Used to create ground truth images
+                    # on category level.
+
+    'hasInstances', # Whether this label distinguishes between single instances or not
+
+    'ignoreInEval', # Whether pixels having this class as ground truth label are ignored
+                    # during evaluations or not
+
+    'color'       , # The color of this label
+
     """
     def __init__(self):
             
@@ -52,12 +88,60 @@ class CityscapesLabelEncoder:
             # create labels dataframe
             self.cityscapes_labels_df = pd.DataFrame(self.label_map_raw[1:], columns=self.label_map_raw[0])  #generate pandas dataframe 
             self.cityscapes_labels_df.loc[self.cityscapes_labels_df["trainId"].isin([255, -1]), "trainId"] = 19 #replace 255 and -1 in trainId column with 19
-            self.category_ids = np.arange(self.cityscapes_labels_df["catId"].nunique()) #get theunique category ids
+            
+            self.category_ids = np.arange(self.cityscapes_labels_df["catId"].nunique()) #get the unique category ids
             self.class_ids = self.cityscapes_labels_df["trainId"].unique()
             self.class_ids.sort() # in-place labels ascending sort
 
-    def make_ohe(self): 
-        pass 
+    def make_ohe(self , labelid_img:np.ndarray , mode="catId"): 
+        """
+        Converts Image with labelids into a one hot encoded format
+        
+        labelid_img : The image with labelids after converting it to a numpy array
+                      In this numpy array, every pixel would be assigned a id. These ids can be found in the self.label_map_raw list.               
+        
+        mode : either catID or trainID depending on the basis of which ID, the one hot encoding needs to be done. 
+
+        """
+        if not isinstance(labelid_img , np.ndarray):
+             
+            try: 
+                labelid_img = np.array(labelid_img)
+            except: 
+                 raise ValueError("==> labelid_img must be converted to a np.ndarray datatype before one hot encoding")        
+        
+        classes = self.category_ids
+        
+        #get relavent classes for one hot encoding 
+        if mode == "trainId": 
+            
+            classes = self.class_ids
+
+        elif mode == "catId":
+             
+            classes = self.category_ids
+        else: 
+            raise ValueError("==> mode for one hot encoding needs to be either catId or trainId ")
+        
+        if len(classes) == 2:
+            classes = [0] 
+
+        #convert all the labels in the labelid_img to the trainId or catId based on mode selection
+        for unique in np.unique(labelid_img):
+            labelid_img[labelid_img == unique] = self.cityscapes_labels_df.loc[self.cityscapes_labels_df["id"] == unique, mode].values[0]
+        labelid_img = labelid_img.astype(int) 
+
+        #generate empty 3D ohe label encoding
+        ohe_labels = np.zeros(labelid_img.shape[:2]+ (len(classes),))
+
+        #Fill the ohe label encodings
+        for c in classes: 
+            y , x = np.where(labelid_img == c)
+            ohe_labels[y,x,c]=1
+        
+        return ohe_labels.astype(int)
+
+         
 
     def inverse_ohe(self):
         pass 
