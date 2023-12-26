@@ -2,15 +2,24 @@
 
 This project implements a slightly modified UNET architecture and uses it to perform binary segmentation as well as multiclass segmentation. 
 
+The Image segmentation has been performed on two datasets. The carvana dataset and the cityscapes dataset. The carvana dataset was initially used to test the perfomance of the UNET model for a simple binary segmentation task. After that the UNET model has been applied for multiclass segmentation on the cityscapes dataset. 
+
+**Changes in UNET**:  
 Compared to the original model [1], I have added a 2d Batch Normalization layers [2] between every Conv2d and ReLU layer in the original UNET architecture. This would accelerate learning by enabling a smoother optimization landscape making the optimization algorithms converge faster.
 
-## 1. Setup
+## 1. Branches
+
+**main:** The main branch holds the implementation of the binary segmentation on the carvana dataset.
+
+**cityscapes:** The cityscapes branch holds the implementation of the multiclass segmentation using the cityscapes dataset
+
+## 2. Setup - Binary Segmentation
 
 After cloning the repository , follow the following steps to run project setup. 
 
 **Note**: All commands are to be run from the project root folder. 
 
-### 1.1: Install Dependencies 
+### 2.1: Install Dependencies 
 
 **Step1**: Create a python virtual environment and activate it
 
@@ -29,7 +38,7 @@ pip3 install -r requirements.txt
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### 1.2: Folder Structure
+### 2.2: Folder Structure - Binary Segmentation
 
 Create the following top folder structure
 
@@ -50,9 +59,7 @@ unet_segmentation_from_scratch
 └── requirements.txt
 
 ```
-## 2. Datasets
-
-### 2.1: Carvana Dataset
+## 3. Dataset - Binary Segmentation
 
 Download the [Carvana Dataset](https://www.kaggle.com/c/carvana-image-masking-challenge/data) from the kaggle page of the Carvana Image Masking Challenge. We need just the data from the folders named train and train_masks. The train folder contains the training set of images and the train_masks contains the .gif mask file for each of the corresponding training images. 
 
@@ -73,7 +80,7 @@ datasets
     └── val_masks        # 50 masks in .gif format
 ```
 
-## 5. Running the Project 
+## 5. Running the Project - Binary Segmentation
 
 ### 5.1 Setting up dataset configurations
 
