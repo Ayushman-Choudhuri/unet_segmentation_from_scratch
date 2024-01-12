@@ -93,7 +93,7 @@ class CityscapesLabelEncoder:
             self.class_ids = self.cityscapes_labels_df["trainId"].unique()
             self.class_ids.sort() # in-place labels ascending sort
 
-    def label2ohe(self , labelid_img:np.ndarray , mode="catId"): 
+    def label2ohe(self , labelid_img:np.ndarray , mode="catId") -> np.ndarray: 
         """
         Converts Image with labelids into a one hot encoded format
         
@@ -142,7 +142,7 @@ class CityscapesLabelEncoder:
         return ohe_labels.astype(int)
     
 
-    def ohe2label(self, ohe_image:np.ndarray):
+    def ohe2label(self, ohe_image:np.ndarray) -> np.ndarray:
         """
         This method converts one hot encoded images back to an image with label ids
         """        
@@ -164,7 +164,7 @@ class CityscapesLabelEncoder:
 
         return labelid_img.astype(int)
     
-    def label2color(self , labelid_img:np.ndarray , mode="catId"):
+    def label2color(self , labelid_img:np.ndarray , mode="catId") -> np.ndarray:
         """
         This method converts labelid image to a RGB segmentation image
         
@@ -177,7 +177,7 @@ class CityscapesLabelEncoder:
                  raise ValueError("==> labelid_img must be converted to a np.ndarray datatype before one hot encoding")
                  
         
-        color_img = np.zeros(labelid_img.shape[:2]+(3,)).astype(np.uint8)
+        color_img = np.zeros(labelid_img.shape[:2]+(3,)).astype(np.uint8) #construct empty RGB image 
 
         id_list = self.cityscapes_labels_df[mode].tolist()
 
@@ -187,3 +187,10 @@ class CityscapesLabelEncoder:
             color_img[ys,xs] = np.array(color_code)
 
         return color_img
+    
+    def color2label(self, color_img:np.ndarray) -> np.ndarray :
+        """
+        This method converts a color segmentation map (RGB) into a labelid image.
+        In the labelid image, each pixel will have the respective label id corresponding to the rgb value of the color 
+        """
+        pass
